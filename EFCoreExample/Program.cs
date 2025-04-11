@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace EFCoreExample
 {
@@ -9,17 +11,33 @@ namespace EFCoreExample
         {
             using (var context = new AppDbContext())
             {
-                // Adding a new student
-                var student = new Student { Name = "John Doe", Age = 20 };
-                context.Students.Add(student);
+                context.Database.EnsureDeleted();
+                context.Database.EnsureCreated();
+
+                // Neue Schule mit Schülern hinzufügen
+                var school = new School
+                {
+                    Name = "HTL Dornbirn",
+                    Students = new List<Student>
+                    {
+                        new Student { Name = "Onur", Age = 17 },
+                        new Student { Name = "Maylin", Age = 16 }
+                    }
+                };
+
+                context.Schools.Add(school);
                 context.SaveChanges();
 
-                // Querying the student
-                var query = context.Students.Where(s => s.Name == "John Doe");
+                // Schulen mit ihren Studenten anzeigen
+                var schools = context.Schools.Include(s => s.Students).ToList();
 
-                foreach (var stud in query)
+                foreach (var sch in schools)
                 {
-                    Console.WriteLine($"Student: {stud.Name}, Age: {stud.Age}");
+                    Console.WriteLine($"Schule: {sch.Name}");
+                    foreach (var stud in sch.Students)
+                    {
+                        Console.WriteLine($"  Student: {stud.Name}, Alter: {stud.Age}");
+                    }
                 }
             }
         }
